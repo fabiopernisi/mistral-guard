@@ -1,9 +1,12 @@
 import pandas as pd
+import os
 
 def save_to_csv(df: pd.DataFrame, file_name: str, file_path: str = "../data"):
     """
     Save DataFrame to CSV file.
     """
+    if not os.path.exists(file_path):
+        os.makedirs(file_path)
     df.to_csv(f"{file_path}/{file_name}.csv", index=False)
 
 def get_first_prompt(df: pd.DataFrame, keyword: str = "Assistant"):
