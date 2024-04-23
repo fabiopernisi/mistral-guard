@@ -1,6 +1,7 @@
 from datasets import load_dataset
 import pandas as pd
-from utils import save_to_csv, get_first_prompt
+from utils import save_to_csv, get_first_prompt, get_batch_completion
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 hh_dataset = load_dataset("Anthropic/hh-rlhf")
 
@@ -13,6 +14,9 @@ hh_train = pd.DataFrame(hh_dataset["train"]) # two columns: "chosen" and "reject
 # containing exactly the same data (the first human prompt)
 def process_data(df: pd.DataFrame):
     df = get_first_prompt(df, "Assistant")
+    tokenizer = AutoTokenizer.from_pretrained("alpindale/WizardLM-2-8x22B")
+    model = AutoModelForCausalLM.from_pretrained("alpindale/WizardLM-2-8x22B")
+    df["generated"] = get_batch_completion(model, tokenizer, df["rejected"].tolist())
     return df
 
 hh_train_processed = process_data(hh_train)

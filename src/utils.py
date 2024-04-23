@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from typing import List
 
 def save_to_csv(df: pd.DataFrame, file_name: str, file_path: str = "../data"):
     """
@@ -19,3 +20,17 @@ def get_first_prompt(df: pd.DataFrame, keyword: str = "Assistant"):
     for column in df.columns:
         df[column] = df[column].apply(lambda x: x[:x.find(keyword)] if keyword in x else x)
     return df
+
+def get_batch_completion(model, tokenizer, texts: List[str], batch_size = 8):
+    """
+    Load corresponding model from Hugging Face and generate completions for given text.
+    """
+    generated = list()
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i + batch_size]
+        inputs = tokenizer(batch, truncation = True, return_tensors="pt")
+        # TODO: Talk about parameters, i.e. top_k, max_length, etc.
+        outputs = model.generate(**inputs, max_length = 512)
+        gen = tokenizer.batch_decode(outputs, skip_special_tokens = True)
+        generated.extend(gen)
+    return generated
