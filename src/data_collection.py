@@ -14,8 +14,11 @@ hh_train = pd.DataFrame(hh_dataset["train"]) # two columns: "chosen" and "reject
 # containing exactly the same data (the first human prompt)
 def process_data(df: pd.DataFrame):
     df = get_first_prompt(df, "Assistant")
-    tokenizer = AutoTokenizer.from_pretrained("alpindale/WizardLM-2-8x22B")
-    model = AutoModelForCausalLM.from_pretrained("alpindale/WizardLM-2-8x22B")
+    tokenizer = AutoTokenizer.from_pretrained("cognitivecomputations/WizardLM-33B-V1.0-Uncensored")
+    tokenizer.padding_side = "left"
+    print("Loading model...")
+    model = AutoModelForCausalLM.from_pretrained("cognitivecomputations/WizardLM-33B-V1.0-Uncensored", device_map = "auto", load_in_4bit = True)
+    print("Finished loading model.")
     df["generated"] = get_batch_completion(model, tokenizer, df["rejected"].sample(1000).tolist())
     return df
 
