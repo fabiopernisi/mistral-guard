@@ -11,9 +11,14 @@ def load_json_prompts(file_path):
             df['label'] = pd.NA
     return df
 
-def load_csv_prompts(file_path):
-    df = pd.read_csv(file_path, usecols=['Behavior', 'Tags'])
-    df.rename(columns={'Behavior': 'prompt', 'Tags': 'label'}, inplace=True)
+def load_csv_prompts(file_path, has_labels=True):
+    if has_labels:
+        df = pd.read_csv(file_path, usecols=['Behavior', 'Tags'])
+        df.rename(columns={'Behavior': 'prompt', 'Tags': 'label'}, inplace=True)
+    else:
+        df = pd.read_csv(file_path, header=None)
+        df.columns = ['prompt']
+        df['label'] = pd.NA  # assign empty column for labels
     return df
 
 def main():
@@ -22,17 +27,19 @@ def main():
         "../data/I-MaliciousInstructions.json",
         "../data/I-PhysicalSafetyUnsafe.json"
     ]
-    csv_file = "../data/harmbench_behaviors_text_all.csv"
+    csv_files = [
+        ("../data/harmbench_behaviors_text_all.csv", True),  # CSV with labels
+        ("../data/transfer_expriment_behaviors.csv", False)  # CSV without labels
+    ]
     
     frames = [load_json_prompts(f) for f in json_files]
     
-    csv_data = load_csv_prompts(csv_file)
+    for file_path, has_labels in csv_files:
+        frames.append(load_csv_prompts(file_path, has_labels))
     
-    # Append all data frames
-    final_df = pd.concat(frames + [csv_data], ignore_index=True)
+    final_df = pd.concat(frames, ignore_index=True)
     
-    # Save to /data folder
-    final_df.to_csv("../data/combined_unsafe_prompts.csv", index=False)
+    final_df.to_csv("../data/merged_unsafe_prompts.csv", index=False)
 
 if __name__ == "__main__":
     main()
