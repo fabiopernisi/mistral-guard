@@ -22,6 +22,13 @@ def get_first_prompt(df: pd.DataFrame, keyword: str = "Assistant"):
         df[column] = df[column].apply(lambda x: x[:x.find(keyword)] if keyword in x else x)
     return df
 
+def apply_prompt_template(texts: List[str]):
+    """
+    Apply prompt template to list of texts.
+    """
+    # https://huggingface.co/cognitivecomputations/WizardLM-33B-V1.0-Uncensored
+    return [f"You are a helpful AI assistant.\n\nUSER: {text}\nASSISTANT:" for text in texts]
+
 def get_batch_completion(model, tokenizer, texts: List[str], batch_size = 4):
     """
     Load corresponding model from Hugging Face and generate completions for given text.
@@ -29,8 +36,8 @@ def get_batch_completion(model, tokenizer, texts: List[str], batch_size = 4):
     generated = []
     for i in tqdm(range(0, len(texts), batch_size), desc = "Generating completions"):
         batch = texts[i:i + batch_size]
-        messages = [{"role": "user", "content": text} for text in batch]
-        inputs = tokenizer.apply_chat_template(messages, tokenize=True, return_tensors="pt").to("cuda")
+        prompts = apply_prompt_template(batch)
+        inputs = tokenizer(prompts, padding = True, return_tensors="pt").to("cuda")
         # TODO: Talk about parameters, i.e. top_k, max_length, etc.
         outputs = model.generate(**inputs, max_length=1024)
         gen = tokenizer.batch_decode(outputs, skip_special_tokens=True)
