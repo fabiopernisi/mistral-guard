@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 from typing import List
+import tqdm
 
 def save_to_csv(df: pd.DataFrame, file_name: str, file_path: str = "../data"):
     """
@@ -26,11 +27,11 @@ def get_batch_completion(model, tokenizer, texts: List[str], batch_size = 8):
     Load corresponding model from Hugging Face and generate completions for given text.
     """
     generated = list()
-    for i in range(0, len(texts), batch_size):
+    for i in tqdm(range(0, len(texts), batch_size)):
         batch = texts[i:i + batch_size]
         inputs = tokenizer(batch, truncation = True, return_tensors="pt")
         # TODO: Talk about parameters, i.e. top_k, max_length, etc.
-        outputs = model.generate(**inputs, max_length = 512)
+        outputs = model.generate(**inputs, max_length = 1024)
         gen = tokenizer.batch_decode(outputs, skip_special_tokens = True)
         generated.extend(gen)
     return generated

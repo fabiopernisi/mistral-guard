@@ -16,7 +16,7 @@ def process_data(df: pd.DataFrame):
     df = get_first_prompt(df, "Assistant")
     tokenizer = AutoTokenizer.from_pretrained("alpindale/WizardLM-2-8x22B")
     model = AutoModelForCausalLM.from_pretrained("alpindale/WizardLM-2-8x22B")
-    df["generated"] = get_batch_completion(model, tokenizer, df["rejected"].tolist())
+    df["generated"] = get_batch_completion(model, tokenizer, df["rejected"].sample(1000).tolist())
     return df
 
 hh_train_processed = process_data(hh_train)
