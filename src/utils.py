@@ -27,6 +27,8 @@ def apply_prompt_template(texts: List[str]):
     Apply prompt template to list of texts.
     """
     # https://huggingface.co/cognitivecomputations/WizardLM-33B-V1.0-Uncensored
+    # Why hardcode? The problem with tokenizer.apply_chat_template is that Huggingface does not automatically detect that the model needs a Vicuna prompt template,
+    # but rather gives it a LLama prompt template.
     return [f"You are a helpful AI assistant.\n\nUSER: {text}\nASSISTANT:" for text in texts]
 
 def get_batch_completion(model, tokenizer, texts: List[str], batch_size = 4):
@@ -41,5 +43,6 @@ def get_batch_completion(model, tokenizer, texts: List[str], batch_size = 4):
         # TODO: Talk about parameters, i.e. top_k, max_length, etc.
         outputs = model.generate(**inputs, max_length=1024)
         gen = tokenizer.batch_decode(outputs, skip_special_tokens=True)
+        print(gen)
         generated.extend(gen)
     return generated
