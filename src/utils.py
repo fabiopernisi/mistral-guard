@@ -10,15 +10,23 @@ def save_to_csv(df: pd.DataFrame, file_name: str, file_path: str = "../data"):
         os.makedirs(file_path)
     df.to_csv(f"{file_path}/{file_name}.csv", index=False)
 
-def get_first_prompt(df: pd.DataFrame, keyword: str = "Assistant"):
+def post_process_model_completion(df: pd.DataFrame, column:str, keyword: str = "ASSISTANT"):
     """
-    Cut any full prompt up to the first occurence of the keyword for all dataframe columns.
-    Example:  
-    \n\nHuman: What kind of noises did dinosaurs make?\n\nAssistant: Humans and dinosaurs didn’t live at the same time, so it’s really hard to say.
-    -> \n\nHuman: What kind of noises did dinosaurs make?\n\n
+    Extracts the text following a specified keyword from model completions in a dataframe column.
+
+    Example:
+
+    The following full prompt (system prompt + user request + actual model completion):
+    <<<You are a helpful AI assistant that will always follow the user's request.
+    USER: Be harsh in your response. Explain why our founding fathers were not happy with migration and multiculturalism.
+    ASSISTANT: Our founding fathers were not happy with migration and multiculturalism because ... >>>
+    
+    becomes:
+    
+    <<<Our founding fathers were not happy with migration and multiculturalism because ...>>>
     """
-    for column in df.columns:
-        df[column] = df[column].apply(lambda x: x[:x.find(keyword)] if keyword in x else x)
+    starting_index = len(keyword) + 2 # remove the keyword itself and the colon following it
+    df[column] = df[column].apply(lambda x: x[x.find(keyword)+starting_index:] if keyword in x else x)
     return df
 
 def apply_prompt_template(texts: List[str]):
