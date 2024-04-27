@@ -2,6 +2,8 @@ from datasets import load_dataset
 import pandas as pd
 from utils import save_to_csv, get_first_prompt, get_batch_completion
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from tqdm import tqdm
+import torch
 
 #hh_dataset = load_dataset("Anthropic/hh-rlhf")
 
@@ -17,9 +19,16 @@ def process_data(df: pd.DataFrame):
     tokenizer = AutoTokenizer.from_pretrained("cognitivecomputations/WizardLM-33B-V1.0-Uncensored")
     tokenizer.padding_side = "left"
     print("Loading model...")
-    model = AutoModelForCausalLM.from_pretrained("cognitivecomputations/WizardLM-33B-V1.0-Uncensored", device_map = "auto", load_in_4bit = True)
+    model = AutoModelForCausalLM.from_pretrained("cognitivecomputations/WizardLM-33B-V1.0-Uncensored", device_map = "auto", load_in_4bit = True, torch_dtype = torch.bfloat16)
     print("Finished loading model.")
-    df["model_completion"] = get_batch_completion(model, tokenizer, df["prompt"].sample(8).tolist())
+    df["model_completion"] = "NaN"
+    step_size = 4
+    for index in tqdm(range(0, len(df), step_size), desc = "Generating completions"):
+        end_index = min(index + step_size, len(df))
+        batch_prompts = df["prompt"][index:end_index].tolist()
+        batch_completions = get_batch_completion(model, tokenizer, batch_prompts, batch_size = step_size)
+        df.loc[index:end_index-1, "model_completion"] = batch_completions
+        save_to_csv(df, "merged_unsafe_prompts_ongoing")
     return df
 
 merged_unsafe_prompts = pd.read_csv("../data/merged_unsafe_prompts.csv")
