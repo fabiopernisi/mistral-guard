@@ -23,13 +23,13 @@ def load_csv_prompts(file_path, has_labels=True):
 
 def main():
     json_files = [
-        "../data/I-CoNa.json",
-        "../data/I-MaliciousInstructions.json",
-        "../data/I-PhysicalSafetyUnsafe.json"
+        "../data/data_source/I-CoNa.json",
+        "../data/data_source/I-MaliciousInstructions.json",
+        "../data/data_source/I-PhysicalSafetyUnsafe.json"
     ]
     csv_files = [
-        ("../data/harmbench_behaviors_text_all.csv", True),  # CSV with labels
-        ("../data/transfer_expriment_behaviors.csv", False)  # CSV without labels
+        ("../data/data_source/harmbench_behaviors_text_all.csv", True),  # CSV with labels
+        ("../data/data_source/transfer_expriment_behaviors.csv", False)  # CSV without labels
     ]
     
     frames = [load_json_prompts(f) for f in json_files]
