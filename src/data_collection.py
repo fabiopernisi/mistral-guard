@@ -20,7 +20,7 @@ def process_data(df: pd.DataFrame):
         save_to_csv(df, "merged_unsafe_prompts_ongoing")
     return df
 
-merged_unsafe_prompts = pd.read_csv("../data/merged_unsafe_prompts.csv")
+merged_unsafe_prompts = pd.read_csv("../data/rerun_unsafe_prompts.csv")
 merged_unsafe_prompts_processed = process_data(merged_unsafe_prompts)
 dataset_postprocessed = post_process_model_completion(merged_unsafe_prompts_processed, "model_completion")
-save_to_csv(dataset_postprocessed, "merged_unsafe_prompts_completion_postprocessed")
+save_to_csv(dataset_postprocessed, "rerun_unsafe_prompts_completion_postprocessed")
