@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 from typing import List
+from torch.utils.data import DataLoader, Dataset
 
 def save_to_csv(df: pd.DataFrame, file_name: str, file_path: str = "../data"):
     """
@@ -54,3 +55,36 @@ def get_batch_completion(model, tokenizer, texts: List[str], batch_size = 4):
         generated.extend(gen)
         del inputs, outputs
     return generated
+
+class PromptDataset(Dataset):
+    def __init__(self, flag, path = "../data/stacked_prompts_splits.csv"):
+        assert flag in ["train", "test", "validation"]
+        self.dataset = pd.read_csv(path)
+        self.dataset = self.dataset[self.dataset["split"] == flag]
+        self.dataset.reset_index(drop=True, inplace=True)
+        self.dataset.drop(columns = ["split"], inplace = True)
+
+    def _format_instruction(sample):
+        return f"""You are a personal stylist recommending fashion advice and clothing combinations. Use the self body and style description below, combined with the event described in the context to generate 5 self-contained and complete outfit combinations.
+            ### Input:
+            {sample["input"]}
+
+            ### Context:
+            {sample["context"]}
+
+            ### Response:
+
+        """
+    def __len__(self):
+        return len(self.dataset)
+    
+    def __getitem__(self, idx):
+        X = self.dataset.iloc[idx]["prompt"]
+        y = self.dataset.iloc[idx]["label"]
+        return X, y
+    
+def data_provider(flag, batch_size):
+    data = PromptDataset(flag)
+    shuffle = False if flag == "test" else True
+    data_loader = DataLoader(data, batch_size = batch_size, shuffle = shuffle) # maybe num_workers but from my experience it slows down training
+    return data, data_loader
