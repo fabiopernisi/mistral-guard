@@ -121,3 +121,7 @@ def config():
         self.lora_dim = lora_dim
         self.lora_alpha = lora_alpha
         self.sloth = sloth
+
+config = config(model_name = "mistralai/Mistral-7B-v0.1", batch_size = 2)
+trainer = Trainer(config)
+trainer.run()
