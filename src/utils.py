@@ -85,7 +85,7 @@ class PromptDataset(Dataset):
         y = self.dataset.iloc[idx]["label"]
         return X, y
     
-def data_provider(flag, batch_size, path = "../data/stacked_prompts_splits.csv", torch = False):
+def data_provider(flag, batch_size, path = "../data/stacked_prompts_split.csv", torch = False):
     if torch:
         data = PromptDataset(flag, path)
         shuffle = False if flag == "test" else True
@@ -117,7 +117,7 @@ class WandbPredictionProgressCallback(WandbCallback):
     """
 
     def __init__(self, trainer, tokenizer, val_dataset,
-                 num_samples=100, freq=50):
+                 num_samples=100, freq = 10):
         """Initializes the WandbPredictionProgressCallback instance.
 
         Args:
@@ -128,31 +128,27 @@ class WandbPredictionProgressCallback(WandbCallback):
             num_samples (int, optional): Number of samples to select from 
               the validation dataset for generating predictions.
               Defaults to 100.
-            freq (int, optional): Frequency of logging. Defaults to 50.
         """
         super().__init__()
         self.trainer = trainer
         self.tokenizer = tokenizer
         self.sample_dataset = val_dataset.select(range(num_samples))
         self.freq = freq
-
-    def decode_predictions(self, tokenizer, predictions):
-        labels = tokenizer.batch_decode(predictions.label_ids)
-        logits = predictions.predictions.argmax(axis=-1)
-        prediction_text = tokenizer.batch_decode(logits)
-        return {"labels": labels, "predictions": prediction_text}
-    def on_evaluate(self, args, state, control, **kwargs):
-        super().on_evaluate(args, state, control, **kwargs)
+    def on_train_begin(self, args, state, control, **kwargs):
+        print("Callback works")
+    def on_step_end(self, args, state, control, **kwargs):
+        super().on_step_end(args, state, control, **kwargs)
         # control the frequency of logging by logging the predictions
         # every `freq` epochs
         if state.global_step % self.freq == 0:
             # generate predictions
-            predictions = self.trainer.predict(self.sample_dataset)
-            # decode predictions and labels
-            predictions = self.decode_predictions(self.tokenizer, predictions)
-            # add predictions to a wandb.Table
-            predictions_df = pd.DataFrame(predictions)
-            predictions_df["epoch"] = state.epoch
+            inputs = self.tokenizer(self.sample_dataset["prompt"], return_tensors="pt", padding=True)
+            generations = self.trainer.model.generate(**inputs, max_new_tokens = 10)
+            decoded_predictions = [self.tokenizer.decode(g, skip_special_tokens=True) for g in generations]
+            print("Example: ", decoded_predictions[0][:-150])
+            predictions_df = pd.DataFrame(decoded_predictions, columns=['Generated Text'])
+            predictions_df["step"] = state.global_step
             records_table = self._wandb.Table(dataframe=predictions_df)
             # log the table to wandb
+            print("Logging that shi")
             self._wandb.log({"sample_predictions": records_table})

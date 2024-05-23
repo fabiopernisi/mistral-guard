@@ -56,14 +56,14 @@ class Trainer():
         return { "text" : output_texts, }
 
     def run(self):
-        train_data, _ = data_provider("train", torch = False)
-        val_data, _ = data_provider("validation" torch = False)
-        train_data = train_data.map(self._formatting_prompts_func) # .map(formatting_prompts_func, batched = True,)
-        val_data = val_data.map(self._formatting_prompts_func)
-        response_template = " ### Answer: "
+        train_data, _ = data_provider("train", torch = False, batch_size = self.config.batch_size)
+        val_data, _ = data_provider("validation", torch = False, batch_size = self.config.batch_size)
+        train_data = train_data.map(self._formatting_prompts_func, batched = True,)# .map(formatting_prompts_func, batched = True,)
+        val_data = val_data.map(self._formatting_prompts_func, batched = True,)#
+        response_template = "### Answer:"
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
         args = TrainingArguments(
-        per_device_train_batch_size = 1,
+        per_device_train_batch_size = self.config.batch_size,
         gradient_accumulation_steps = 4,
         warmup_steps = 5,
         max_steps = self.config.steps, # Set num_train_epochs = 1 for full training runs
@@ -74,10 +74,10 @@ class Trainer():
         optim = "adamw_8bit",
         weight_decay = 0.01,
         lr_scheduler_type = "linear",
-        eval_strategy = "steps",
-        eval_steps = self.config.steps// 15,
+        #eval_strategy = "steps",
+        #eval_steps = 1,
         report_to="wandb",
-        run_name=f"SFT_{self.config.steps}_{self.config.lr}"
+        run_name=f"SFT_{self.config.steps}_{self.config.lr}",
         seed = 42,
         output_dir = "outputs",
         )
@@ -85,20 +85,20 @@ class Trainer():
             self.model,
             tokenizer = self.tokenizer,
             train_dataset=train_data,
-            eval_dataset=val_data,
+            #eval_dataset=val_data,
             dataset_text_field = "text",
             data_collator=collator,
             max_seq_length=self.config.max_seq_length,
             args = args
         )
-
         progress_callback = WandbPredictionProgressCallback(
             trainer=trainer,
             tokenizer=self.tokenizer,
             val_dataset=val_data,
-            num_samples=10,
-            freq=50,
+            num_samples=1,
+            freq = 5,
         )
+        trainer.add_callback(progress_callback)
         trainer.train()
 
     # Good prompts and completions: https://huggingface.co/datasets/yahma/alpaca-cleaned
@@ -122,9 +122,10 @@ class Trainer():
     #             with torch.cuda.amp.autocast():
     #                 outputs = self.model(X, labels = y)
 os.environ["WANDB_PROJECT"]="LCJ"
-def config():
+os.environ["WANDB_LOG_MODEL"]="false"
+class config():
     # TODO: Change max_seq_length to max amount of token input + 1
-    def __init__(self, model_name, batch_size = 4, lr = 2e-4, steps = 600, max_seq_length = 20000, lora = True, lora_dim = 16, lora_alpha = 16, sloth = True):
+    def __init__(self, model_name, batch_size = 4, lr = 2e-4, steps = 600, max_seq_length = 32678, lora = True, lora_dim = 16, lora_alpha = 16, sloth = True):
         self.model_name = model_name
         self.batch_size = batch_size
         self.lr = lr
@@ -135,6 +136,6 @@ def config():
         self.lora_alpha = lora_alpha
         self.sloth = sloth
 
-config = config(model_name = "mistralai/Mistral-7B-v0.1", batch_size = 2)
-trainer = Trainer(config)
+run_config = config(model_name = "mistralai/Mistral-7B-v0.1", batch_size = 4, lora_dim = 32)
+trainer = Trainer(run_config)
 trainer.run()
