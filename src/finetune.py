@@ -4,9 +4,10 @@ import numpy as np
 from torch.optim.lr_scheduler import SequentialLR, LinearLR, StepLR
 import torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
-from utils import data_provider
+from utils import data_provider, WandbPredictionProgressCallback
 from tqdm import tqdm
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
+import os
 
 class Trainer():
     def __init__(self, config):
@@ -46,46 +47,57 @@ class Trainer():
         return torch.optim.Adam(self.model.parameters(), lr=self.config.lr)
     def _formatting_prompts_func(self, example):
         output_texts = []
-        for i in range(len(example['instruction'])):
-            text = f"""<s>### You are an helpful AI Model. Classify the question into one of these categories. 
-            Question: {example['prompt'][i]}\n ### Answer: {example['label'][i]} + {self.tokenizer.eos_token}"""
+        prompts = example["prompt"]
+        labels = example["label"]
+        assert len(prompts) == len(labels)
+        for prompt, label in zip(prompts, labels):
+            text = f"### Question: {prompt}\n ### Answer: {label}{self.tokenizer.eos_token}"
             output_texts.append(text)
-        return output_texts
+        return { "text" : output_texts, }
 
     def run(self):
-        train_data, _ = data_provider("train", self.config.batch_size)
-        val_data, _ = data_provider("validation", self.config.batch_size)
-        response_template = " ### Answer:"
+        train_data, _ = data_provider("train", torch = False)
+        val_data, _ = data_provider("validation" torch = False)
+        train_data = train_data.map(self._formatting_prompts_func) # .map(formatting_prompts_func, batched = True,)
+        val_data = val_data.map(self._formatting_prompts_func)
+        response_template = " ### Answer: "
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
-        training_args = TrainingArguments(
-            output_dir="first_model_checkpoint/",
-            # num_train_epochs=3,
-            # max_steps = 100,
-            per_device_train_batch_size=4,
-            gradient_accumulation_steps=2,
-            gradient_checkpointing=True,
-            evaluation_strategy="epoch",
-            # evaluation_strategy="steps",
-            # eval_steps=20,
-            optim="adamw_8bit",
-            logging_steps=10,
-            save_strategy="epoch",
-            learning_rate=2e-4,
-            bf16=True,
-            # tf32=True,
-            # max_grad_norm=0.3,
-            warmup_ratio=0.03,
-            lr_scheduler_type="constant",
-            disable_tqdm=False
+        args = TrainingArguments(
+        per_device_train_batch_size = 1,
+        gradient_accumulation_steps = 4,
+        warmup_steps = 5,
+        max_steps = self.config.steps, # Set num_train_epochs = 1 for full training runs
+        learning_rate = self.config.lr,
+        # fp16 = not is_bfloat16_supported(),
+        bf16 = True,
+        logging_steps = 1,
+        optim = "adamw_8bit",
+        weight_decay = 0.01,
+        lr_scheduler_type = "linear",
+        eval_strategy = "steps",
+        eval_steps = self.config.steps// 15,
+        report_to="wandb",
+        run_name=f"SFT_{self.config.steps}_{self.config.lr}"
+        seed = 42,
+        output_dir = "outputs",
         )
         trainer = SFTTrainer(
             self.model,
+            tokenizer = self.tokenizer,
             train_dataset=train_data,
-            val_dataset=val_data,
-            formatting_func=self._formatting_prompts_func,
+            eval_dataset=val_data,
+            dataset_text_field = "text",
             data_collator=collator,
             max_seq_length=self.config.max_seq_length,
-            args = training_args
+            args = args
+        )
+
+        progress_callback = WandbPredictionProgressCallback(
+            trainer=trainer,
+            tokenizer=self.tokenizer,
+            val_dataset=val_data,
+            num_samples=10,
+            freq=50,
         )
         trainer.train()
 
@@ -109,13 +121,14 @@ class Trainer():
     #             optimizer.zero_grad()
     #             with torch.cuda.amp.autocast():
     #                 outputs = self.model(X, labels = y)
-
+os.environ["WANDB_PROJECT"]="LCJ"
 def config():
-    def __init__(self, model_name, batch_size = 4, lr = 2e-4, epochs = 3, max_seq_length = 32678, lora = True, lora_dim = 16, lora_alpha = 16, sloth = True):
+    # TODO: Change max_seq_length to max amount of token input + 1
+    def __init__(self, model_name, batch_size = 4, lr = 2e-4, steps = 600, max_seq_length = 20000, lora = True, lora_dim = 16, lora_alpha = 16, sloth = True):
         self.model_name = model_name
         self.batch_size = batch_size
         self.lr = lr
-        self.epochs = epochs
+        self.steps = steps
         self.max_seq_length = max_seq_length
         self.lora = lora
         self.lora_dim = lora_dim

@@ -2,6 +2,8 @@ import pandas as pd
 import os
 from typing import List
 from torch.utils.data import DataLoader, Dataset
+import datasets
+from transformers.integrations import WandbCallback
 
 def save_to_csv(df: pd.DataFrame, file_name: str, file_path: str = "../data"):
     """
@@ -57,7 +59,7 @@ def get_batch_completion(model, tokenizer, texts: List[str], batch_size = 4):
     return generated
 
 class PromptDataset(Dataset):
-    def __init__(self, flag, path = "../data/stacked_prompts_splits.csv"):
+    def __init__(self, flag, path):
         assert flag in ["train", "test", "validation"]
         self.dataset = pd.read_csv(path)
         self.dataset = self.dataset[self.dataset["split"] == flag]
@@ -83,8 +85,74 @@ class PromptDataset(Dataset):
         y = self.dataset.iloc[idx]["label"]
         return X, y
     
-def data_provider(flag, batch_size):
-    data = PromptDataset(flag)
-    shuffle = False if flag == "test" else True
-    data_loader = DataLoader(data, batch_size = batch_size, shuffle = shuffle) # maybe num_workers but from my experience it slows down training
-    return data, data_loader
+def data_provider(flag, batch_size, path = "../data/stacked_prompts_splits.csv", torch = False):
+    if torch:
+        data = PromptDataset(flag, path)
+        shuffle = False if flag == "test" else True
+        data_loader = DataLoader(data, batch_size = batch_size, shuffle = shuffle) # maybe num_workers but from my experience it slows down training
+        return data, data_loader
+    else:
+        data = pd.read_csv(path)
+        data = data[data["split"] == flag]
+        data.reset_index(drop=True, inplace=True)
+        data.drop(columns = ["split"], inplace = True)
+        return datasets.Dataset.from_pandas(data), None
+
+# from https://docs.wandb.ai/guides/integrations/huggingface#custom-logging-log-and-view-evaluation-samples-during-training
+class WandbPredictionProgressCallback(WandbCallback):
+    """Custom WandbCallback to log model predictions during training.
+
+    This callback logs model predictions and labels to a wandb.Table at each 
+    logging step during training. It allows to visualize the 
+    model predictions as the training progresses.
+
+    Attributes:
+        trainer (Trainer): The Hugging Face Trainer instance.
+        tokenizer (AutoTokenizer): The tokenizer associated with the model.
+        sample_dataset (Dataset): A subset of the validation dataset 
+          for generating predictions.
+        num_samples (int, optional): Number of samples to select from 
+          the validation dataset for generating predictions. Defaults to 100.
+        freq (int, optional): Frequency of logging. Defaults to 2.
+    """
+
+    def __init__(self, trainer, tokenizer, val_dataset,
+                 num_samples=100, freq=50):
+        """Initializes the WandbPredictionProgressCallback instance.
+
+        Args:
+            trainer (Trainer): The Hugging Face Trainer instance.
+            tokenizer (AutoTokenizer): The tokenizer associated 
+              with the model.
+            val_dataset (Dataset): The validation dataset.
+            num_samples (int, optional): Number of samples to select from 
+              the validation dataset for generating predictions.
+              Defaults to 100.
+            freq (int, optional): Frequency of logging. Defaults to 50.
+        """
+        super().__init__()
+        self.trainer = trainer
+        self.tokenizer = tokenizer
+        self.sample_dataset = val_dataset.select(range(num_samples))
+        self.freq = freq
+
+    def decode_predictions(self, tokenizer, predictions):
+        labels = tokenizer.batch_decode(predictions.label_ids)
+        logits = predictions.predictions.argmax(axis=-1)
+        prediction_text = tokenizer.batch_decode(logits)
+        return {"labels": labels, "predictions": prediction_text}
+    def on_evaluate(self, args, state, control, **kwargs):
+        super().on_evaluate(args, state, control, **kwargs)
+        # control the frequency of logging by logging the predictions
+        # every `freq` epochs
+        if state.global_step % self.freq == 0:
+            # generate predictions
+            predictions = self.trainer.predict(self.sample_dataset)
+            # decode predictions and labels
+            predictions = self.decode_predictions(self.tokenizer, predictions)
+            # add predictions to a wandb.Table
+            predictions_df = pd.DataFrame(predictions)
+            predictions_df["epoch"] = state.epoch
+            records_table = self._wandb.Table(dataframe=predictions_df)
+            # log the table to wandb
+            self._wandb.log({"sample_predictions": records_table})
