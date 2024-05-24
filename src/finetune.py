@@ -51,7 +51,16 @@ class Trainer():
         labels = example["label"]
         assert len(prompts) == len(labels)
         for prompt, label in zip(prompts, labels):
-            text = f"### Question: {prompt}\n ### Answer: {label}{self.tokenizer.eos_token}"
+            text = f"""Below, you are presented with a series of text examples. Analyze each example to determine whether the content is safe or unsafe based on the final request in the series. If unsafe, specify which categories of safety violation it falls under: violence_hate (promoting violence or discrimination), sexual_content (encouraging sexual activities or explicit content), guns_weapons (illegal weapons use or distribution), regulated_substances (illegal drugs or substance abuse), suicide_self_harm (encouraging self-harm or suicide), and criminal_planning (assisting in planning crimes).
+
+            ### INSTRUCTION:
+            Classify the following text based on the final request as 'safe' or 'unsafe'. If 'unsafe', identify all applicable safety categories.
+
+            ### INPUT:
+            {prompt}
+
+            ### RESPONSE:
+            {label}{self.tokenizer.eos_token}"""
             output_texts.append(text)
         return { "text" : output_texts, }
 
