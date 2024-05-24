@@ -4,6 +4,7 @@ from typing import List
 from torch.utils.data import DataLoader, Dataset
 import datasets
 from transformers.integrations import WandbCallback
+import torch
 
 def save_to_csv(df: pd.DataFrame, file_name: str, file_path: str = "../data"):
     """
@@ -134,21 +135,36 @@ class WandbPredictionProgressCallback(WandbCallback):
         self.tokenizer = tokenizer
         self.sample_dataset = val_dataset.select(range(num_samples))
         self.freq = freq
-    def on_train_begin(self, args, state, control, **kwargs):
-        print("Callback works")
+        self.sample_dataset = self.sample_dataset.map(self.add_instruction)
+    # def on_train_begin(self, args, state, control, **kwargs):
+    #     print("Callback works")
+    
+    def add_instruction(self, sample):
+        formatted_text = f"""Below, you are presented with a series of text examples. Analyze each example to determine whether the content is safe or unsafe based on the final request in the series. If it is unsafe, your output should begin with 'Unsafe, ' followed by the identification of the specific category of safety violation it pertains to: violence_hate (promoting violence or discrimination), sexual_content (encouraging sexual activities or explicit content), guns_weapons (illegal weapons use or distribution), regulated_substances (illegal drugs or substance abuse), suicide_self_harm (encouraging self-harm or suicide), and criminal_planning (assisting in planning crimes).
+
+        ### INSTRUCTION:
+        Classify the following text based on the final request as 'safe' or 'unsafe'. If 'unsafe', identify all applicable safety categories.
+
+        ### INPUT:
+        {sample['prompt']}
+
+        ### RESPONSE:
+        """
+        return {'instruction': formatted_text}
     def on_step_end(self, args, state, control, **kwargs):
         super().on_step_end(args, state, control, **kwargs)
         # control the frequency of logging by logging the predictions
         # every `freq` epochs
         if state.global_step % self.freq == 0:
-            # generate predictions
-            inputs = self.tokenizer(self.sample_dataset["prompt"], return_tensors="pt", padding=True)
-            generations = self.trainer.model.generate(**inputs, max_new_tokens = 10)
-            decoded_predictions = [self.tokenizer.decode(g, skip_special_tokens=True) for g in generations]
-            print("Example: ", decoded_predictions[0][:-150])
-            predictions_df = pd.DataFrame(decoded_predictions, columns=['Generated Text'])
-            predictions_df["step"] = state.global_step
-            records_table = self._wandb.Table(dataframe=predictions_df)
-            # log the table to wandb
-            print("Logging that shi")
-            self._wandb.log({"sample_predictions": records_table})
+            with torch.inference_mode():
+                # generate predictions
+                inputs = self.tokenizer(self.sample_dataset["instruction"], return_tensors="pt", padding=True)
+                generations = self.trainer.model.generate(**inputs, max_new_tokens = 10)
+                decoded_predictions = [self.tokenizer.decode(g, skip_special_tokens=True) for g in generations]
+                print("Example: ", decoded_predictions[0][-150:])
+                predictions_df = pd.DataFrame(decoded_predictions, columns=['Generated Text'])
+                predictions_df["step"] = state.global_step
+                records_table = self._wandb.Table(dataframe=predictions_df)
+                # log the table to wandb
+                print("Logging that shi")
+                self._wandb.log({"sample_predictions": records_table})
