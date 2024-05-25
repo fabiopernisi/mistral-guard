@@ -13,14 +13,14 @@ def create_stacked_prompt(train_prompts, good_requests, prompt_amount, test_requ
         p = np.random.random()
         if p > 0.5:
             if idx < prompt_amount // 2:
-                prompt += "USER: " + good_requests.iloc[idx] + "\nASSISTANT: "
+                prompt += "USER: " + good_requests.iloc[idx] + "\n\n\n"
                 label = "Safe"
             else:
                 if test_requests is None:
-                    prompt += "USER: " + train_prompts.iloc[sampled_idx[-1]]["prompt"] + "\nASSISTANT: "
+                    prompt += "USER: " + train_prompts.iloc[sampled_idx[-1]]["prompt"] + "\n\n\n "
                     label = train_prompts.iloc[sampled_idx[-1]]["safety_category"]
                 else:
-                    prompt += "USER: " + test_requests.iloc[idx] + "\nASSISTANT: "
+                    prompt += "USER: " + test_requests.iloc[idx]['prompt'] + "\n\n\n"
                     label = test_requests.iloc[idx]["safety_category"]
             flag = 1
 
@@ -28,14 +28,14 @@ def create_stacked_prompt(train_prompts, good_requests, prompt_amount, test_requ
             prompt += "USER: " + train_prompts.iloc[i]["prompt"] + "\nASSISTANT: " + train_prompts.iloc[i]["edited_unsafe_completion"] + "\n\n"
         if flag == 0:
             if idx < prompt_amount // 2:
-                prompt += "USER: " + good_requests.iloc[idx] + "\nASSISTANT: "
+                prompt += "USER: " + good_requests.iloc[idx] + "\n"
                 label = "Safe"
             else:
                 if test_requests is None:
-                    prompt += "USER: " + train_prompts.iloc[sampled_idx[-1]]["prompt"] + "\nASSISTANT: "
+                    prompt += "USER: " + train_prompts.iloc[sampled_idx[-1]]["prompt"] + "\n"
                     label = train_prompts.iloc[sampled_idx[-1]]["safety_category"]
                 else:
-                    prompt += "USER: " + test_requests.iloc[idx] + "\nASSISTANT: "
+                    prompt += "USER: " + test_requests.iloc[idx]['prompt'] + "\n"
                     label = test_requests.iloc[idx]["safety_category"]
         # if len(prompt) > prompt_size[1] or len(prompt) < prompt_size[0]:
         #     continue
