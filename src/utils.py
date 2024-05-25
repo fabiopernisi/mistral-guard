@@ -166,5 +166,4 @@ class WandbPredictionProgressCallback(WandbCallback):
                 predictions_df["step"] = state.global_step
                 records_table = self._wandb.Table(dataframe=predictions_df)
                 # log the table to wandb
-                print("Logging that shi")
                 self._wandb.log({"sample_predictions": records_table})

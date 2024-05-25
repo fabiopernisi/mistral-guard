@@ -76,7 +76,8 @@ class Trainer():
 
     def run(self):
         train_data, _ = data_provider("train", torch = False, batch_size = self.config.batch_size)
-        val_data, _ = data_provider("validation", torch = False, batch_size = self.config.batch_size)
+        val_data, _ = data_provider("val", torch = False, batch_size = self.config.batch_size)
+        assert len(val_data) > 0
         train_data = train_data.map(self._formatting_prompts_func, batched = True,)# .map(formatting_prompts_func, batched = True,)
         val_data = val_data.map(self._formatting_prompts_func, batched = True,)#
         response_template = "### RESPONSE:"
