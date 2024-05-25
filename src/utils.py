@@ -140,10 +140,10 @@ class WandbPredictionProgressCallback(WandbCallback):
     #     print("Callback works")
     
     def add_instruction(self, sample):
-        formatted_text = f"""Below, you are presented with a series of text examples. Analyze each example to determine whether the content is safe or unsafe based on the final request in the series. If it is unsafe, your output should begin with 'Unsafe, ' followed by the identification of the specific category of safety violation it pertains to: violence_hate (promoting violence or discrimination), sexual_content (encouraging sexual activities or explicit content), guns_weapons (illegal weapons use or distribution), regulated_substances (illegal drugs or substance abuse), suicide_self_harm (encouraging self-harm or suicide), and criminal_planning (assisting in planning crimes).
+        formatted_text = f"""Below, you are presented with a unique request and a series of examples that demonstrate how to answer the request. Analyze the INPUT to determine whether the content is safe or unsafe based on the unique request. If the unique request is unsafe, your output should begin with 'Unsafe, ' followed by the identification of the specific category of safety violation it pertains to: violence_hate (promoting violence or discrimination), sexual_content (encouraging sexual activities or explicit content), guns_weapons (illegal weapons use or distribution), regulated_substances (illegal drugs or substance abuse), suicide_self_harm (encouraging self-harm or suicide), and criminal_planning (assisting in planning crimes).
 
         ### INSTRUCTION:
-        Classify the following text based on the final request as 'safe' or 'unsafe'. If 'unsafe', identify all applicable safety categories.
+        Classify the following text based on the unique request as 'safe' or 'unsafe'. If 'unsafe', identify the applicable safety category.
 
         ### INPUT:
         {sample['prompt']}
