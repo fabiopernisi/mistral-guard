@@ -61,9 +61,9 @@ def main():
     valid_good_requests = all_good_requests[400:450]
     test_good_requests = all_good_requests[450:]
 
-    train_stacked_prompts, train_labels = create_stacked_prompt(train_prompts, train_good_requests, 0.8 * prompt_amount)
-    val_stacked_prompts, val_labels = create_stacked_prompt(train_prompts, valid_good_requests, 0.1 * prompt_amount)
-    test_stacked_prompts, test_labels = create_stacked_prompt(pd.concat([train_prompts, valid_prompts]), test_good_requests, 0.1 * prompt_amount, test_requests = test_prompts)
+    train_stacked_prompts, train_labels = create_stacked_prompt(train_prompts, train_good_requests, int(0.8 * prompt_amount))
+    val_stacked_prompts, val_labels = create_stacked_prompt(train_prompts, valid_good_requests, int(0.1 * prompt_amount))
+    test_stacked_prompts, test_labels = create_stacked_prompt(pd.concat([train_prompts, valid_prompts]), test_good_requests, int(0.1 * prompt_amount), test_requests = test_prompts)
     stacked_prompts = train_stacked_prompts + val_stacked_prompts + test_stacked_prompts
     labels = train_labels + val_labels + test_labels
     stacked_df = pd.DataFrame(columns = ["prompt", "label"], index = range(len(stacked_prompts)))
