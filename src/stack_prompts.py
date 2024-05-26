@@ -2,6 +2,7 @@ import pandas as pd
 from datasets import load_dataset
 import numpy as np
 
+np.random.seed(42)
 
 def create_stacked_prompt(train_prompts, good_requests, prompt_amount, test_requests = None):
     stacked_prompts, labels = [], []
