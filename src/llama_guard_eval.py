@@ -13,7 +13,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_id, token = "hf_XuayMqJetUiRqKAQ
 model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=dtype, device_map=device, token = "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")
 
 
-path = "../data/stacked_prompts_split_1.0_short.csv"
+path = "../data/stacked_prompts_split_no_context.csv"
 dataset = pd.read_csv(path) # sample dataset
 dataset = dataset[dataset["split"] == "test"]
 print(len(dataset))

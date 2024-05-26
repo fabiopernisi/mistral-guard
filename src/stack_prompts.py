@@ -48,7 +48,8 @@ def create_mixed_stacked_prompt(train_prompts, good_requests, prompt_amount, saf
     stacked_prompts, labels = [], []
     for idx in range(prompt_amount):
         prompt = ""
-        demonstrations = np.random.randint(2, 8)
+        # demonstrations = np.random.randint(2, 8)
+        demonstrations = 1
         sampled_idx = np.random.choice(len(train_prompts), size=demonstrations, replace=False)
         flag = 0
         p = np.random.random()
@@ -129,6 +130,6 @@ def main():
     stacked.loc[stacked.index > stacked.index.max()*0.9, 'split'] = 'test'
     stacked["prompt"], stacked["label"] = stacked_prompts, labels
     stacked = stacked.sample(frac=1).reset_index(drop=True)
-    stacked.to_csv(f"../data/stacked_prompts_split_{safe_p}_short.csv", index=False)
+    stacked.to_csv(f"../data/stacked_prompts_split_no_context.csv", index=False)
 if __name__ == "__main__":
     main()
