@@ -48,7 +48,7 @@ def create_mixed_stacked_prompt(train_prompts, good_requests, prompt_amount, saf
     stacked_prompts, labels = [], []
     for idx in range(prompt_amount):
         prompt = ""
-        demonstrations = np.random.randint(3, 10)
+        demonstrations = np.random.randint(2, 8)
         sampled_idx = np.random.choice(len(train_prompts), size=demonstrations, replace=False)
         flag = 0
         p = np.random.random()
@@ -114,7 +114,7 @@ def main():
     valid_good_requests = all_good_requests[400:450]
     test_good_requests = all_good_requests[450:]
 
-    safe_p = 0.0
+    safe_p = 1.0
     train_stacked_prompts, train_labels = create_mixed_stacked_prompt(train_prompts, train_good_requests, int(0.8 * prompt_amount),
                             safe_percentage = safe_p, alpaca_instructions = alpaca_instructions, alpaca_output = alpaca_output)
     val_stacked_prompts, val_labels = create_mixed_stacked_prompt(train_prompts, valid_good_requests, int(0.1 * prompt_amount),
