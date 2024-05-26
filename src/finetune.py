@@ -135,7 +135,7 @@ class Trainer():
         return {'instruction': formatted_text}
     @torch.inference_mode()
     def generate_predictions(self, bs = 5):
-        test_data, _ = data_provider("test", torch = False, batch_size = self.config.batch_size)
+        test_data, _ = data_provider("test", torch = False, batch_size = self.config.batch_size, path = "../data/stacked_prompts_split_0.5.csv")
         test_data = test_data.map(self._add_test_instruction)
         all_generations = []
         self.model.eval()
@@ -148,7 +148,7 @@ class Trainer():
                 decoded_predictions = [self.tokenizer.decode(g, skip_special_tokens=True) for g in generations]
                 all_generations.extend(decoded_predictions)
         test_data = test_data.add_column("completion", all_generations)
-        test_data.to_csv("../data/lcj_completion_begin_end_125.csv")
+        test_data.to_csv("../data/lcj_completion_begin_end_125_safe_demos.csv")
 
     # Good prompts and completions: https://huggingface.co/datasets/yahma/alpaca-cleaned
     # https://exnrt.com/blog/ai/mistral-7b-fine-tuning/
