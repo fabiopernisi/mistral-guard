@@ -18,10 +18,10 @@ def create_stacked_prompt(train_prompts, good_requests, prompt_amount, test_requ
             else:
                 if test_requests is None:
                     prompt += "USER: " + train_prompts.iloc[sampled_idx[-1]]["prompt"] + "\n\n\n "
-                    label = train_prompts.iloc[sampled_idx[-1]]["safety_category"]
+                    label = "Unsafe, " + train_prompts.iloc[sampled_idx[-1]]["safety_category"]
                 else:
                     prompt += "USER: " + test_requests.iloc[idx]['prompt'] + "\n\n\n"
-                    label = test_requests.iloc[idx]["safety_category"]
+                    label = "Unsafe, " + test_requests.iloc[idx]["safety_category"]
             flag = 1
 
         for i in sampled_idx[:len(sampled_idx) - 2]:
@@ -33,10 +33,10 @@ def create_stacked_prompt(train_prompts, good_requests, prompt_amount, test_requ
             else:
                 if test_requests is None:
                     prompt += "USER: " + train_prompts.iloc[sampled_idx[-1]]["prompt"] + "\n"
-                    label = train_prompts.iloc[sampled_idx[-1]]["safety_category"]
+                    label = "Unsafe, " + train_prompts.iloc[sampled_idx[-1]]["safety_category"]
                 else:
                     prompt += "USER: " + test_requests.iloc[idx]['prompt'] + "\n"
-                    label = test_requests.iloc[idx]["safety_category"]
+                    label = "Unsafe, " + test_requests.iloc[idx]["safety_category"]
         # if len(prompt) > prompt_size[1] or len(prompt) < prompt_size[0]:
         #     continue
         stacked_prompts.append(prompt)
