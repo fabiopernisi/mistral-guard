@@ -9,8 +9,8 @@ model_id = "meta-llama/LlamaGuard-7b"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 dtype = torch.bfloat16
 
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=dtype, device_map=device)
+tokenizer = AutoTokenizer.from_pretrained(model_id, token = "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")
+model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=dtype, device_map=device, token = "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")
 
 
 path = "../data/lcj_completion_begin_end_125_safe_demos_00.csv"

@@ -48,7 +48,7 @@ def create_mixed_stacked_prompt(train_prompts, good_requests, prompt_amount, saf
     stacked_prompts, labels = [], []
     for idx in range(prompt_amount):
         prompt = ""
-        demonstrations = np.random.randint(45, 60)
+        demonstrations = np.random.randint(2, 15)
         sampled_idx = np.random.choice(len(train_prompts), size=demonstrations, replace=False)
         flag = 0
         p = np.random.random()
