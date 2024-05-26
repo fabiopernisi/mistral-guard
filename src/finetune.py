@@ -17,7 +17,7 @@ class Trainer():
             from unsloth import FastLanguageModel
             if config.inference:
                 self.model, self.tokenizer = FastLanguageModel.from_pretrained(
-                    model_name = "outputs_begin_end/checkpoint-100/", # YOUR MODEL YOU USED FOR TRAINING
+                    model_name = "outputs_begin_end/checkpoint-75/", # YOUR MODEL YOU USED FOR TRAINING
                     max_seq_length = config.max_seq_length,
                     dtype = torch.bfloat16,
                     load_in_4bit = True
@@ -148,7 +148,7 @@ class Trainer():
                 decoded_predictions = [self.tokenizer.decode(g, skip_special_tokens=True) for g in generations]
                 all_generations.extend(decoded_predictions)
         test_data = test_data.add_column("completion", all_generations)
-        test_data.to_csv("../data/lcj_completion_begin_end.csv")
+        test_data.to_csv("../data/lcj_completion_begin_end_75.csv")
 
     # Good prompts and completions: https://huggingface.co/datasets/yahma/alpaca-cleaned
     # https://exnrt.com/blog/ai/mistral-7b-fine-tuning/
