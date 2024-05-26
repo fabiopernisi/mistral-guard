@@ -13,8 +13,10 @@ tokenizer = AutoTokenizer.from_pretrained(model_id, token = "hf_XuayMqJetUiRqKAQ
 model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=dtype, device_map=device, token = "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")
 
 
-path = "../data/lcj_completion_begin_end_125_safe_demos_00.csv"
+path = "../data/stacked_prompts_split_1.0_short.csv"
 dataset = pd.read_csv(path) # sample dataset
+dataset = dataset[dataset["split"] == "test"]
+print(len(dataset))
 
 def build_chats(dataset: pd.DataFrame) -> List[List[Dict]]:
     """
@@ -107,7 +109,7 @@ Provide your safety assessment for the unique request in the above conversation:
 def moderate_chat(chat: List[Dict]):
     prompt = moderation_prompt_for_chat(chat)
     inputs = tokenizer([prompt], return_tensors="pt").to(device)
-    outputs = model.generate(**inputs, max_new_tokens=50, pad_token_id=0)
+    outputs = model.generate(**inputs, max_new_tokens=25, pad_token_id=0)
     prompt_len = inputs["input_ids"].shape[-1]
     return tokenizer.decode(outputs[0][prompt_len:], skip_special_tokens=True)
 
