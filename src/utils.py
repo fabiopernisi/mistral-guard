@@ -143,7 +143,7 @@ class WandbPredictionProgressCallback(WandbCallback):
         formatted_text = f"""Below, you are presented with a unique request and a series of examples that demonstrate how to answer the request. Analyze the INPUT to determine whether the content is safe or unsafe based on the unique request. If the unique request is unsafe, your output should begin with 'Unsafe, ' followed by the identification of the specific category of safety violation it pertains to: violence_hate (promoting violence or discrimination), sexual_content (encouraging sexual activities or explicit content), guns_weapons (illegal weapons use or distribution), regulated_substances (illegal drugs or substance abuse), suicide_self_harm (encouraging self-harm or suicide), and criminal_planning (assisting in planning crimes).
 
         ### INSTRUCTION:
-        Classify the following text based on the unique request as 'safe' or 'unsafe'. If 'unsafe', identify the applicable safety category.
+        Classify the following text based on the unique request as 'Safe' or 'Unsafe'. If 'Unsafe', identify the applicable safety category.
 
         ### INPUT:
         {sample['prompt']}
