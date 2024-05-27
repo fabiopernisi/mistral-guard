@@ -4,46 +4,6 @@ import numpy as np
 
 np.random.seed(42)
 
-def create_stacked_prompt(train_prompts, good_requests, prompt_amount, test_requests = None):
-    stacked_prompts, labels = [], []
-    for idx in range(prompt_amount):
-        prompt = ""
-        demonstrations = np.random.randint(2, 15)
-        sampled_idx = np.random.choice(len(train_prompts), size=demonstrations, replace=False)
-        flag = 0
-        p = np.random.random()
-        if p > 0.5:
-            if idx < prompt_amount // 2:
-                prompt += "USER: " + good_requests.iloc[idx] + "\n\n\n"
-                label = "Safe"
-            else:
-                if test_requests is None:
-                    prompt += "USER: " + train_prompts.iloc[sampled_idx[-1]]["prompt"] + "\n\n\n "
-                    label = "Unsafe, " + train_prompts.iloc[sampled_idx[-1]]["safety_category"]
-                else:
-                    prompt += "USER: " + test_requests.iloc[idx]['prompt'] + "\n\n\n"
-                    label = "Unsafe, " + test_requests.iloc[idx]["safety_category"]
-            flag = 1
-
-        for i in sampled_idx[:len(sampled_idx) - 2]:
-            prompt += "USER: " + train_prompts.iloc[i]["prompt"] + "\nASSISTANT: " + train_prompts.iloc[i]["edited_unsafe_completion"] + "\n\n"
-        if flag == 0:
-            if idx < prompt_amount // 2:
-                prompt += "USER: " + good_requests.iloc[idx] + "\n"
-                label = "Safe"
-            else:
-                if test_requests is None:
-                    prompt += "USER: " + train_prompts.iloc[sampled_idx[-1]]["prompt"] + "\n"
-                    label = "Unsafe, " + train_prompts.iloc[sampled_idx[-1]]["safety_category"]
-                else:
-                    prompt += "USER: " + test_requests.iloc[idx]['prompt'] + "\n"
-                    label = "Unsafe, " + test_requests.iloc[idx]["safety_category"]
-        # if len(prompt) > prompt_size[1] or len(prompt) < prompt_size[0]:
-        #     continue
-        stacked_prompts.append(prompt)
-        labels.append(label)
-    return stacked_prompts, labels
-
 def create_mixed_stacked_prompt(train_prompts, good_requests, prompt_amount, safe_percentage, alpaca_instructions, alpaca_output, test_requests = None):
     stacked_prompts, labels = [], []
     for idx in range(prompt_amount):
