@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 from typing import List, Dict
 
+#inspired by https://colab.research.google.com/drive/16s0tlCSEDtczjPzdIK3jq0Le5LlnSYGf?usp=sharing
+
 model_id = "meta-llama/LlamaGuard-7b"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 dtype = torch.bfloat16
