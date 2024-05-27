@@ -1,7 +1,6 @@
-from utils import load_from_csv
-
 from openai import OpenAI
 from tqdm import tqdm
+import pandas as pd
 import os
 
 client = OpenAI(api_key="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")
@@ -39,24 +38,24 @@ def classify_completion(input_text):
 
     return result
 
-def main(file_name):
+def main(file_path):
     results = []
     accuracy = 0
-    data = load_from_csv(file_name)
+    data = pd.read_csv(file_path)
     count = 1
-    file_path = "../data/" + file_name + ".csv"
-    if not os.path.exists(file_path):
-        return
     for _, row in tqdm(data.iterrows()):
         input_text = row["prompt"]
+
         result = classify_completion(input_text)
         results.append(result)
         result = result.replace(" ", "")
         result = result.replace("\n", "")
         result = result.lower()
+
         label = row["label"].replace(" ", "")
         label = label.replace("\n", "")
         label = label.lower()
+
         if result == label:
             accuracy += 1
         else:
@@ -70,10 +69,11 @@ def main(file_name):
     print(f"Accuracy: {accuracy / len(data)}")
     data["gpt_4o_results"] = results
     data.to_csv(file_path, index=False)
+    print("Results saved to ", file_path)
     return accuracy / len(data)
 
 if __name__ == "__main__":
-    file_names = ["lcj_completion_begin_end_125_safe_demos_00", "lcj_completion_begin_end_125_safe_demos_05", "lcj_completion_begin_end_125_safe_demos_10"]
+    file_names = ["../data/no_context/stacked_prompts_split_no_context.csv"]
     for file_name in file_names:
         print(f"\n\n############ Running main on {file_name} ############\n\n")
         main(file_name)
