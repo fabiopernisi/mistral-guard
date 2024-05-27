@@ -37,7 +37,6 @@ class Model():
                         lora_alpha = config.lora_alpha,
                         lora_dropout = 0,
                         bias = "none",
-                        # [NEW] "unsloth" uses 30% less VRAM, fits 2x larger batch sizes!
                         use_gradient_checkpointing = "unsloth",
                         random_state = 42,
                     )
@@ -82,21 +81,21 @@ class Model():
 
         # Declare the training arguments, if no wandb comment out report_to and run_name
         args = TrainingArguments(
-        per_device_train_batch_size = self.config.batch_size,
-        gradient_accumulation_steps = 4,
-        warmup_steps = 5,
-        max_steps = self.config.steps,
-        learning_rate = self.config.lr,
-        bf16 = True,
-        save_steps = 25,
-        logging_steps = 1,
-        optim = "adamw_8bit",
-        weight_decay = 0.01,
-        lr_scheduler_type = "linear",
-        report_to="wandb",
-        run_name=f"SFT_begin_end_{self.config.steps}_{self.config.lr}",
-        seed = 42,
-        output_dir = "outputs_begin_end",
+            per_device_train_batch_size = self.config.batch_size,
+            gradient_accumulation_steps = 4,
+            warmup_steps = 5,
+            max_steps = self.config.steps,
+            learning_rate = self.config.lr,
+            bf16 = True,
+            save_steps = 25,
+            logging_steps = 1,
+            optim = "adamw_8bit",
+            weight_decay = 0.01,
+            lr_scheduler_type = "linear",
+            report_to="wandb",
+            run_name=f"SFT_begin_end_{self.config.steps}_{self.config.lr}",
+            seed = 42,
+            output_dir = "outputs_begin_end",
         )
         trainer = SFTTrainer(
             self.model,
