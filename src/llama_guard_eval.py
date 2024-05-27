@@ -1,6 +1,5 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
-from huggingface_hub import login
 import pandas as pd
 import numpy as np
 from typing import List, Dict
@@ -9,14 +8,13 @@ model_id = "meta-llama/LlamaGuard-7b"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 dtype = torch.bfloat16
 
-tokenizer = AutoTokenizer.from_pretrained(model_id, token = "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")
-model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=dtype, device_map=device, token = "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")
+tokenizer = AutoTokenizer.from_pretrained(model_id, token = "") # Insert hf token for Llama Guard
+model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=dtype, device_map=device, token = "") # Also insert here
 
 
 path = "../data/stacked_prompts_split_no_context.csv"
 dataset = pd.read_csv(path) # sample dataset
 dataset = dataset[dataset["split"] == "test"]
-print(len(dataset))
 
 def build_chats(dataset: pd.DataFrame) -> List[List[Dict]]:
     """

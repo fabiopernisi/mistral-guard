@@ -2,6 +2,7 @@ import pandas as pd
 from datasets import load_dataset
 import numpy as np
 
+# Fix seed for reproducability, crucial to ensure that always the same test requests are used
 np.random.seed(42)
 
 def create_mixed_stacked_prompt(train_prompts, good_requests, prompt_amount, safe_percentage, alpaca_instructions, alpaca_output, test_requests = None):
