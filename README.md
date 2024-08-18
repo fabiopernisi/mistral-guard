@@ -1,10 +1,10 @@
 # MistralGuard: Long Context Safeguards for Human-AI Conversations
 
-by Giosuè Castellano, Giovanni Gatti, Rolf Minardi, Fabio Pernisi
+by Giosuè Castellano, Giovanni Gatti, Rolf Minardi, Fabio Pernisi.
 
-Final Research Project for the class _20879 - Language Technology_ @ Bocconi University (2024)
+Final Research Project for the class _20879 - Language Technology_ @ Bocconi University (2024).
 
-Full Paper: [MistralGuard: Long Context Safeguards for Human-AI Conversations](assets/MistralGuard.pdf)
+Full Paper: [MistralGuard: Long Context Safeguards for Human-AI Conversations](assets/MistralGuard.pdf).
 
 ## Abstract
 > As Large Language Models (LLMs) are increasingly being adopted and integrated into
@@ -20,3 +20,10 @@ Full Paper: [MistralGuard: Long Context Safeguards for Human-AI Conversations](a
 > MistralGuard outperforms the state-of-the-art model GPT-4o and the first iteration of Llama
 > Guard across several contexts. It demonstrates superior performance in zero-shot (no-context),
 > many-shot (short-context under 8k tokens), and long-context scenarios (8k to 32k tokens).
+
+<div align="center">
+  <img src="assets/intro.png" alt="img">
+  <p><em>Example of a long context prompt.</em></p>
+</div>
+
+
