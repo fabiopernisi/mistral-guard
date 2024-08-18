@@ -22,12 +22,12 @@ Full Paper: [MistralGuard: Long Context Safeguards for Human-AI Conversations](a
 > many-shot (short-context under 8k tokens), and long-context scenarios (8k to 32k tokens).
 
 <div align="center">
-  <img src="assets/intro.png" alt="img" width="300" height="auto">
+  <img src="assets/intro.png" alt="img" width="400" height="auto">
   <p><em>Example of a long context prompt.</em></p>
 </div>
 
 ## Results
-Evaluation results can be reproduced running the [`evaluation` notebook](src/evaluation.ipynb).
+Evaluation results can be reproduced running the `evaluation` [notebook](src/evaluation.ipynb).
 
 ## Contact Information
 Contact the authors at: name DOT surname AT studbocconi DOT it.
